@@ -180,5 +180,26 @@ router.post('/save/:id', authMiddleware, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+router.get('/admin/stats', authMiddleware, checkAdmin, async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments({ isVerified: true }); // Only verified
+    const totalJobs = await Job.countDocuments();
+    const totalApplications = await Application.countDocuments();
+    
+    // Simple "Applications per Status" breakdown
+    const statusBreakdown = await Application.aggregate([
+      { $group: { _id: "$status", count: { $sum: 1 } } }
+    ]);
+
+    res.json({
+      totalUsers,
+      totalJobs,
+      totalApplications,
+      statusBreakdown
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
 
 export default router;

@@ -10,14 +10,14 @@ import { Building2, MapPin, Clock, CheckCircle, XCircle, AlertCircle } from 'luc
 interface Application {
   _id: string;
   status: 'Pending' | 'Shortlisted' | 'Rejected' | 'Waitlisted';
-  job: Job; // The job details are nested inside
+  job: Job; 
   createdAt: string;
 }
 
 const Dashboard = () => {
   const { user } = useAuth();
   const [savedJobs, setSavedJobs] = useState<Job[]>([]);
-  const [appliedJobs, setAppliedJobs] = useState<Application[]>([]); // Changed type
+  const [appliedJobs, setAppliedJobs] = useState<Application[]>([]); 
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'saved' | 'applied'>('saved');
 
@@ -44,6 +44,54 @@ const Dashboard = () => {
       case 'Waitlisted': return <span className="flex items-center text-gray-600 bg-gray-50 px-3 py-1 rounded-full text-sm font-medium"><AlertCircle className="w-4 h-4 mr-2"/> Waitlisted</span>;
       default: return <span className="flex items-center text-yellow-600 bg-yellow-50 px-3 py-1 rounded-full text-sm font-medium"><Clock className="w-4 h-4 mr-2"/> Pending</span>;
     }
+  };
+
+  // --- NEW: Visual Timeline Component ---
+  const Timeline = ({ status }: { status: string }) => {
+    const isRejected = status === 'Rejected';
+    const isShortlisted = status === 'Shortlisted';
+    
+    // Logic: 
+    // Step 1 (Applied): Always green
+    // Step 2 (Review): Green if not Pending (meaning admin touched it)
+    // Step 3 (Decision): Green if Shortlisted, Red if Rejected, Gray if Pending/Waitlisted
+    
+    return (
+      <div className="mt-6 pt-4 border-t border-gray-100">
+        <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+          <span>Applied</span>
+          <span>Review</span>
+          <span>Decision</span>
+        </div>
+        
+        {/* Progress Bar Container */}
+        <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden flex">
+          {/* Step 1: Applied */}
+          <div className="w-1/3 bg-green-500 h-full"></div>
+          
+          {/* Step 2: Review (Active if status isn't just 'Pending') */}
+          <div className={`w-1/3 h-full border-l border-white ${
+            status !== 'Pending' ? 'bg-green-500' : 'bg-gray-200'
+          }`}></div>
+          
+          {/* Step 3: Decision */}
+          <div className={`w-1/3 h-full border-l border-white ${
+            isShortlisted ? 'bg-green-500' : 
+            isRejected ? 'bg-red-500' : 
+            'bg-gray-200'
+          }`}></div>
+        </div>
+
+        {/* Status Text */}
+        <p className="text-right text-xs mt-2 font-medium">
+          Current Stage: <span className={`${
+            isShortlisted ? 'text-green-600' : 
+            isRejected ? 'text-red-600' : 
+            'text-primary'
+          }`}>{status}</span>
+        </p>
+      </div>
+    );
   };
 
   if (loading) return <div className="p-8 text-center">Loading dashboard...</div>;
@@ -117,8 +165,11 @@ const Dashboard = () => {
                   <MapPin className="h-4 w-4 mr-1" /> {app.job.location}
                 </div>
 
+                {/* --- NEW: Visual Timeline --- */}
+                <Timeline status={app.status} />
+
                 {/* View Button */}
-                <div className="mt-6">
+                <div className="mt-4">
                   <Link 
                     to={`/jobs/${app.job._id}`}
                     className="w-full block text-center bg-gray-50 border border-gray-200 text-gray-600 px-4 py-2 rounded-md font-medium hover:bg-gray-100 transition"

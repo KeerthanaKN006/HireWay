@@ -3,10 +3,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import User from '../models/User.js';
-
+import authMiddleware from '../middleware/authmiddleware.js';
 const router = express.Router();
-
-// NOTE: Transporter creation is moved INSIDE the route to ensure .env is loaded
 
 // 1. Signup (Send OTP)
 router.post('/signup', async (req, res) => {
@@ -144,6 +142,46 @@ router.post('/login', async (req, res) => {
 
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/profile', authMiddleware, async (req, res) => {
+  try {
+    const { name, title, bio, phone } = req.body;
+    
+    // Find and update
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.name = name || user.name;
+    user.title = title || user.title;
+    user.bio = bio || user.bio;
+    user.phone = phone || user.phone;
+
+    await user.save();
+
+    res.json({ 
+      id: user._id, 
+      name: user.name, 
+      email: user.email, 
+      title: user.title,
+      bio: user.bio,
+      phone: user.phone,
+      // ... keep other fields if needed for context
+      savedJobs: user.savedJobs,
+      appliedJobs: user.appliedJobs
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+router.get('/profile', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password -otp -otpExpires');
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
   }
 });
 

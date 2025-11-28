@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Briefcase, LogOut, LayoutDashboard, PlusCircle, Search } from 'lucide-react';
+import { Briefcase, LogOut, LayoutDashboard, PlusCircle, Search, User } from 'lucide-react';
 
 const Navbar = () => {
   const { user, logout, isAuthenticated, role } = useAuth();
@@ -48,11 +48,17 @@ const Navbar = () => {
               </Link>
             )}
 
-            {/* --- USER DASHBOARD (Only for non-admins) --- */}
+            {/* --- USER DASHBOARD & PROFILE (Only for non-admins) --- */}
             {isAuthenticated && role === 'user' && (
-              <Link to="/dashboard" className="text-gray-600 hover:text-primary px-3 py-2 rounded-md text-sm font-medium">
-                My Dashboard
-              </Link>
+              <>
+                <Link to="/dashboard" className="text-gray-600 hover:text-primary px-3 py-2 rounded-md text-sm font-medium">
+                  My Dashboard
+                </Link>
+                {/* NEW PROFILE LINK */}
+                <Link to="/profile" className="text-gray-600 hover:text-primary px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                  <User className="w-4 h-4 mr-1" /> Profile
+                </Link>
+              </>
             )}
 
             {/* --- AUTH BUTTONS --- */}

@@ -8,7 +8,7 @@ import Dashboard from './pages/Dashboard';
 import JobDetail from './pages/JobDetail';
 import ApplyJob from './pages/ApplyJob'; // <--- NEW IMPORT
 import ProtectedRoute from './components/ProtectedRoute';
-
+import Profile from './pages/Profile';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AddJob from './pages/admin/AddJob';
 import AdminRoute from './components/AdminRoute';
@@ -47,6 +47,7 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
             {/* --- ADMIN ROUTES --- */}
             <Route 
