@@ -6,7 +6,9 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import JobDetail from './pages/JobDetail';
+import ApplyJob from './pages/ApplyJob'; // <--- NEW IMPORT
 import ProtectedRoute from './components/ProtectedRoute';
+
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AddJob from './pages/admin/AddJob';
 import AdminRoute from './components/AdminRoute';
@@ -24,7 +26,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             
-            {/* User Dashboard (Protected) */}
+            {/* User Dashboard & Actions */}
             <Route 
               path="/dashboard" 
               element={
@@ -36,7 +38,17 @@ function App() {
             
             <Route path="/jobs/:id" element={<JobDetail />} />
 
-            {/* --- ADMIN ROUTES (New) --- */}
+            {/* --- NEW ROUTE: Apply with Resume --- */}
+            <Route 
+              path="/jobs/:id/apply" 
+              element={
+                <ProtectedRoute>
+                  <ApplyJob />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* --- ADMIN ROUTES --- */}
             <Route 
               path="/admin" 
               element={

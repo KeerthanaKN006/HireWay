@@ -1,13 +1,23 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import { Job } from '../types';
 import JobCard from '../components/JobCard';
 import { useAuth } from '../context/AuthContext';
+import { Building2, MapPin, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+
+// New Interface for Application Data
+interface Application {
+  _id: string;
+  status: 'Pending' | 'Shortlisted' | 'Rejected' | 'Waitlisted';
+  job: Job; // The job details are nested inside
+  createdAt: string;
+}
 
 const Dashboard = () => {
   const { user } = useAuth();
   const [savedJobs, setSavedJobs] = useState<Job[]>([]);
-  const [appliedJobs, setAppliedJobs] = useState<Job[]>([]);
+  const [appliedJobs, setAppliedJobs] = useState<Application[]>([]); // Changed type
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'saved' | 'applied'>('saved');
 
@@ -26,6 +36,15 @@ const Dashboard = () => {
 
     fetchDashboard();
   }, []);
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'Shortlisted': return <span className="flex items-center text-green-600 bg-green-50 px-3 py-1 rounded-full text-sm font-medium"><CheckCircle className="w-4 h-4 mr-2"/> Shortlisted</span>;
+      case 'Rejected': return <span className="flex items-center text-red-600 bg-red-50 px-3 py-1 rounded-full text-sm font-medium"><XCircle className="w-4 h-4 mr-2"/> Rejected</span>;
+      case 'Waitlisted': return <span className="flex items-center text-gray-600 bg-gray-50 px-3 py-1 rounded-full text-sm font-medium"><AlertCircle className="w-4 h-4 mr-2"/> Waitlisted</span>;
+      default: return <span className="flex items-center text-yellow-600 bg-yellow-50 px-3 py-1 rounded-full text-sm font-medium"><Clock className="w-4 h-4 mr-2"/> Pending</span>;
+    }
+  };
 
   if (loading) return <div className="p-8 text-center">Loading dashboard...</div>;
 
@@ -64,17 +83,55 @@ const Dashboard = () => {
 
       {/* Content */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {activeTab === 'saved' ? (
+        
+        {/* === SAVED JOBS TAB (Standard JobCards) === */}
+        {activeTab === 'saved' && (
           savedJobs.length > 0 ? (
             savedJobs.map((job) => <JobCard key={job._id} job={job} />)
           ) : (
-            <p className="text-gray-500">You haven't saved any jobs yet.</p>
+            <div className="col-span-full text-center py-10 text-gray-500 bg-white rounded-lg border border-dashed">
+              You haven't saved any jobs yet.
+            </div>
           )
-        ) : (
+        )}
+
+        {/* === APPLIED JOBS TAB (Custom Cards with Status) === */}
+        {activeTab === 'applied' && (
           appliedJobs.length > 0 ? (
-            appliedJobs.map((job) => <JobCard key={job._id} job={job} />)
+            appliedJobs.map((app) => (
+              <div key={app._id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                
+                {/* Status Header */}
+                <div className="flex justify-between items-start mb-4">
+                  {getStatusBadge(app.status)}
+                  <span className="text-xs text-gray-400">{new Date(app.createdAt).toLocaleDateString()}</span>
+                </div>
+
+                {/* Job Info */}
+                <h3 className="text-lg font-semibold text-gray-900">{app.job.title}</h3>
+                <p className="text-gray-600 flex items-center mt-1">
+                  <Building2 className="h-4 w-4 mr-1" /> {app.job.company}
+                </p>
+
+                <div className="mt-4 flex items-center text-sm text-gray-500">
+                  <MapPin className="h-4 w-4 mr-1" /> {app.job.location}
+                </div>
+
+                {/* View Button */}
+                <div className="mt-6">
+                  <Link 
+                    to={`/jobs/${app.job._id}`}
+                    className="w-full block text-center bg-gray-50 border border-gray-200 text-gray-600 px-4 py-2 rounded-md font-medium hover:bg-gray-100 transition"
+                  >
+                    View Job Description
+                  </Link>
+                </div>
+              </div>
+            ))
           ) : (
-            <p className="text-gray-500">You haven't applied to any jobs yet.</p>
+            <div className="col-span-full text-center py-10 text-gray-500 bg-white rounded-lg border border-dashed">
+              You haven't applied to any jobs yet.
+            </div>
           )
         )}
       </div>

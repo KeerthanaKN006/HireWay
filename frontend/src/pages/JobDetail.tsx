@@ -46,15 +46,11 @@ const JobDetail = () => {
     }
   };
 
-  const handleApply = async () => {
+  // --- CHANGED: Navigate to Apply Page instead of immediate API call ---
+  const handleApply = () => {
     if (!isAuthenticated) return navigate('/login');
-    try {
-      await api.post(`/jobs/apply/${id}`);
-      setApplied(true);
-      alert('Application Successful!');
-    } catch (err) {
-      alert('Error applying');
-    }
+    // Navigate to the Resume Upload Page
+    navigate(`/jobs/${id}/apply`);
   };
 
   if (loading) return <div className="p-10 text-center">Loading Job Details...</div>;
