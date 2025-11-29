@@ -4,9 +4,8 @@ import api from '../api/axios';
 import { Job } from '../types';
 import JobCard from '../components/JobCard';
 import { useAuth } from '../context/AuthContext';
-import { Building2, MapPin, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Building2, MapPin, Clock, CheckCircle, XCircle, AlertCircle, ArrowRight } from 'lucide-react';
 
-// New Interface for Application Data
 interface Application {
   _id: string;
   status: 'Pending' | 'Shortlisted' | 'Rejected' | 'Waitlisted';
@@ -25,166 +24,144 @@ const Dashboard = () => {
     const fetchDashboard = async () => {
       try {
         const res = await api.get('/jobs/user/dashboard');
-        setSavedJobs(res.data.saved);
-        setAppliedJobs(res.data.applied);
+        
+        // FIXED: Filter out items where 'job' is null (deleted jobs)
+        const validSaved = (res.data.saved || []).filter((job: Job | null) => job !== null);
+        const validApplied = (res.data.applied || []).filter((app: Application) => app.job !== null);
+        
+        setSavedJobs(validSaved);
+        setAppliedJobs(validApplied);
       } catch (err) {
         console.error('Error fetching dashboard', err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchDashboard();
   }, []);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'Shortlisted': return <span className="flex items-center text-green-600 bg-green-50 px-3 py-1 rounded-full text-sm font-medium"><CheckCircle className="w-4 h-4 mr-2"/> Shortlisted</span>;
-      case 'Rejected': return <span className="flex items-center text-red-600 bg-red-50 px-3 py-1 rounded-full text-sm font-medium"><XCircle className="w-4 h-4 mr-2"/> Rejected</span>;
-      case 'Waitlisted': return <span className="flex items-center text-gray-600 bg-gray-50 px-3 py-1 rounded-full text-sm font-medium"><AlertCircle className="w-4 h-4 mr-2"/> Waitlisted</span>;
-      default: return <span className="flex items-center text-yellow-600 bg-yellow-50 px-3 py-1 rounded-full text-sm font-medium"><Clock className="w-4 h-4 mr-2"/> Pending</span>;
+      case 'Shortlisted': return <span className="flex items-center text-green-700 bg-green-100 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border border-green-200"><CheckCircle className="w-3 h-3 mr-1.5"/> Shortlisted</span>;
+      case 'Rejected': return <span className="flex items-center text-red-700 bg-red-100 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border border-red-200"><XCircle className="w-3 h-3 mr-1.5"/> Rejected</span>;
+      case 'Waitlisted': return <span className="flex items-center text-orange-700 bg-orange-100 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border border-orange-200"><AlertCircle className="w-3 h-3 mr-1.5"/> Waitlisted</span>;
+      default: return <span className="flex items-center text-primary bg-[#F5F5DC] px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border border-primary/20"><Clock className="w-3 h-3 mr-1.5"/> Pending</span>;
     }
   };
 
-  // --- NEW: Visual Timeline Component ---
   const Timeline = ({ status }: { status: string }) => {
     const isRejected = status === 'Rejected';
     const isShortlisted = status === 'Shortlisted';
     
-    // Logic: 
-    // Step 1 (Applied): Always green
-    // Step 2 (Review): Green if not Pending (meaning admin touched it)
-    // Step 3 (Decision): Green if Shortlisted, Red if Rejected, Gray if Pending/Waitlisted
-    
     return (
-      <div className="mt-6 pt-4 border-t border-gray-100">
-        <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+      <div className="mt-6 pt-4 border-t border-dashed border-gray-200">
+        <div className="flex items-center justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
           <span>Applied</span>
           <span>Review</span>
           <span>Decision</span>
         </div>
-        
-        {/* Progress Bar Container */}
-        <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden flex">
-          {/* Step 1: Applied */}
-          <div className="w-1/3 bg-green-500 h-full"></div>
-          
-          {/* Step 2: Review (Active if status isn't just 'Pending') */}
-          <div className={`w-1/3 h-full border-l border-white ${
-            status !== 'Pending' ? 'bg-green-500' : 'bg-gray-200'
-          }`}></div>
-          
-          {/* Step 3: Decision */}
-          <div className={`w-1/3 h-full border-l border-white ${
-            isShortlisted ? 'bg-green-500' : 
-            isRejected ? 'bg-red-500' : 
-            'bg-gray-200'
-          }`}></div>
+        <div className="relative h-1.5 bg-gray-100 rounded-full overflow-hidden flex">
+          <div className="w-1/3 bg-primary h-full"></div>
+          <div className={`w-1/3 h-full border-l border-white ${status !== 'Pending' ? 'bg-primary' : 'bg-gray-200'}`}></div>
+          <div className={`w-1/3 h-full border-l border-white ${isShortlisted ? 'bg-green-500' : isRejected ? 'bg-red-500' : 'bg-gray-200'}`}></div>
         </div>
-
-        {/* Status Text */}
-        <p className="text-right text-xs mt-2 font-medium">
-          Current Stage: <span className={`${
-            isShortlisted ? 'text-green-600' : 
-            isRejected ? 'text-red-600' : 
-            'text-primary'
-          }`}>{status}</span>
-        </p>
       </div>
     );
   };
 
-  if (loading) return <div className="p-8 text-center">Loading dashboard...</div>;
+  if (loading) return <div className="min-h-screen bg-[#F5F5DC] flex items-center justify-center text-primary font-bold text-lg tracking-widest animate-pulse">LOADING DASHBOARD...</div>;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Welcome, {user?.name}</h1>
-        <p className="text-gray-600">Manage your job search progress here.</p>
-      </div>
+    <div className="min-h-screen bg-[#F5F5DC] relative overflow-hidden">
+      {/* Decorative BG Blob */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="-mb-px flex space-x-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+        <div className="mb-10">
+          <h1 className="text-4xl font-extrabold text-primary mb-2">Hello, {user?.name}</h1>
+          <p className="text-gray-600">Here is the state of your career search.</p>
+        </div>
+
+        {/* Unique Tab Design */}
+        <div className="flex space-x-2 mb-8 bg-white p-1.5 rounded-xl shadow-sm border border-primary/10 w-fit">
           <button
             onClick={() => setActiveTab('saved')}
-            className={`pb-4 px-1 border-b-2 font-medium text-sm ${
+            className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${
               activeTab === 'saved'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'bg-primary text-[#F5F5DC] shadow-md'
+                : 'text-gray-500 hover:bg-gray-50'
             }`}
           >
             Saved Jobs ({savedJobs.length})
           </button>
           <button
             onClick={() => setActiveTab('applied')}
-            className={`pb-4 px-1 border-b-2 font-medium text-sm ${
+            className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${
               activeTab === 'applied'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'bg-primary text-[#F5F5DC] shadow-md'
+                : 'text-gray-500 hover:bg-gray-50'
             }`}
           >
             Applied Jobs ({appliedJobs.length})
           </button>
-        </nav>
-      </div>
+        </div>
 
-      {/* Content */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        
-        {/* === SAVED JOBS TAB (Standard JobCards) === */}
-        {activeTab === 'saved' && (
-          savedJobs.length > 0 ? (
-            savedJobs.map((job) => <JobCard key={job._id} job={job} />)
-          ) : (
-            <div className="col-span-full text-center py-10 text-gray-500 bg-white rounded-lg border border-dashed">
-              You haven't saved any jobs yet.
-            </div>
-          )
-        )}
-
-        {/* === APPLIED JOBS TAB (Custom Cards with Status) === */}
-        {activeTab === 'applied' && (
-          appliedJobs.length > 0 ? (
-            appliedJobs.map((app) => (
-              <div key={app._id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                
-                {/* Status Header */}
-                <div className="flex justify-between items-start mb-4">
-                  {getStatusBadge(app.status)}
-                  <span className="text-xs text-gray-400">{new Date(app.createdAt).toLocaleDateString()}</span>
-                </div>
-
-                {/* Job Info */}
-                <h3 className="text-lg font-semibold text-gray-900">{app.job.title}</h3>
-                <p className="text-gray-600 flex items-center mt-1">
-                  <Building2 className="h-4 w-4 mr-1" /> {app.job.company}
-                </p>
-
-                <div className="mt-4 flex items-center text-sm text-gray-500">
-                  <MapPin className="h-4 w-4 mr-1" /> {app.job.location}
-                </div>
-
-                {/* --- NEW: Visual Timeline --- */}
-                <Timeline status={app.status} />
-
-                {/* View Button */}
-                <div className="mt-4">
-                  <Link 
-                    to={`/jobs/${app.job._id}`}
-                    className="w-full block text-center bg-gray-50 border border-gray-200 text-gray-600 px-4 py-2 rounded-md font-medium hover:bg-gray-100 transition"
-                  >
-                    View Job Description
-                  </Link>
-                </div>
+        {/* Content */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          
+          {activeTab === 'saved' && (
+            savedJobs.length > 0 ? (
+              savedJobs.map((job) => <JobCard key={job._id} job={job} />)
+            ) : (
+              <div className="col-span-full py-20 text-center border-2 border-dashed border-primary/20 rounded-3xl bg-white/50">
+                <p className="text-primary font-medium">No saved jobs yet.</p>
               </div>
-            ))
-          ) : (
-            <div className="col-span-full text-center py-10 text-gray-500 bg-white rounded-lg border border-dashed">
-              You haven't applied to any jobs yet.
-            </div>
-          )
-        )}
+            )
+          )}
+
+          {activeTab === 'applied' && (
+            appliedJobs.length > 0 ? (
+              appliedJobs.map((app) => (
+                <div key={app._id} className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-primary/10 group overflow-hidden">
+                  <div className="h-2 w-full bg-primary/10 group-hover:bg-primary transition-colors duration-300"></div>
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      {getStatusBadge(app.status)}
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">{new Date(app.createdAt).toLocaleDateString()}</span>
+                    </div>
+
+                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors">{app.job?.title}</h3>
+                    <p className="text-gray-500 text-sm mt-1 flex items-center font-medium">
+                      <Building2 className="h-4 w-4 mr-1.5" /> {app.job?.company}
+                    </p>
+
+                    <div className="mt-3 flex items-center text-xs text-gray-400 font-medium">
+                      <MapPin className="h-3 w-3 mr-1" /> {app.job?.location}
+                    </div>
+
+                    <Timeline status={app.status} />
+
+                    <div className="mt-5">
+                      {/* Only render link if job exists */}
+                      {app.job && (
+                        <Link 
+                          to={`/jobs/${app.job._id}`}
+                          className="w-full flex items-center justify-center text-sm font-bold text-primary bg-[#F5F5DC] py-3 rounded-xl hover:bg-primary hover:text-[#F5F5DC] transition-all duration-300 group-hover:shadow-md"
+                        >
+                          View Details <ArrowRight className="w-4 h-4 ml-1.5" />
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-full py-20 text-center border-2 border-dashed border-primary/20 rounded-3xl bg-white/50">
+                <p className="text-primary font-medium">Start applying to build your timeline.</p>
+              </div>
+            )
+          )}
+        </div>
       </div>
     </div>
   );

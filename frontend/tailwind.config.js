@@ -7,8 +7,8 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: "#4F46E5", // Indigo-600
-        secondary: "#64748B", // Slate-500
+        primary: "#470524ff", // Indigo-600
+        secondary: "#f4eddcff", // Slate-500
       }
     },
   },

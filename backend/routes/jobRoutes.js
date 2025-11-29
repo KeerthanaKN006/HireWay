@@ -115,10 +115,10 @@ router.patch('/application/:appId/status', authMiddleware, checkAdmin, async (re
 
     // Send Email Notification
     const mailOptions = {
-      from: `"JobHunt Admin" <${process.env.EMAIL_USER}>`,
+      from: `"HireWay Admin" <${process.env.EMAIL_USER}>`,
       to: app.user.email,
       subject: `Application Update: ${app.job.title}`,
-      text: `Hello ${app.user.name},\n\nYour application status for ${app.job.title} has been updated to: ${status}.\n\nBest,\nJobHunt Team`,
+      text: `Hello ${app.user.name},\n\nYour application status for ${app.job.title} has been updated to: ${status}.\n\nBest,\nHireWay Team`,
     };
     
     await transporter.sendMail(mailOptions);

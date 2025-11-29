@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { Job } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { Building2, MapPin, Briefcase, DollarSign, Clock, CheckCircle } from 'lucide-react';
+import { Building2, MapPin, Briefcase, DollarSign, Clock, CheckCircle, ArrowLeft } from 'lucide-react';
 
 const JobDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -20,8 +20,6 @@ const JobDetail = () => {
       try {
         const res = await api.get(`/jobs/${id}`);
         setJob(res.data);
-        
-        // If user is logged in, check if they already saved/applied
         if (user) {
           setSaved(user.savedJobs.includes(id!));
           setApplied(user.appliedJobs.includes(id!));
@@ -41,91 +39,110 @@ const JobDetail = () => {
       await api.post(`/jobs/save/${id}`);
       setSaved(true);
       alert('Job Saved!');
-    } catch (err) {
-      alert('Error saving job');
-    }
+    } catch (err) { alert('Error'); }
   };
 
-  // --- CHANGED: Navigate to Apply Page instead of immediate API call ---
   const handleApply = () => {
     if (!isAuthenticated) return navigate('/login');
-    // Navigate to the Resume Upload Page
     navigate(`/jobs/${id}/apply`);
   };
 
-  if (loading) return <div className="p-10 text-center">Loading Job Details...</div>;
-  if (!job) return <div className="p-10 text-center">Job not found</div>;
+  if (loading) return <div className="min-h-screen bg-[#F5F5DC] flex items-center justify-center">Loading...</div>;
+  if (!job) return <div className="min-h-screen bg-[#F5F5DC] flex items-center justify-center">Job not found</div>;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-100">
+    <div className="min-h-screen bg-[#F5F5DC]">
+      
+      {/* --- HERO HEADER (Maroon) --- */}
+      <div className="bg-primary text-[#F5F5DC] pt-24 pb-32 px-4 relative overflow-hidden">
+        <div className="absolute top-0 right-0 opacity-10 pointer-events-none">
+           <Building2 className="w-96 h-96 -translate-y-1/2 translate-x-1/4" />
+        </div>
         
-        {/* Header Section */}
-        <div className="p-8 border-b border-gray-100 bg-gray-50">
-          <div className="flex justify-between items-start">
+        <div className="max-w-4xl mx-auto relative z-10">
+          <button onClick={() => navigate(-1)} className="flex items-center text-[#F5F5DC]/70 hover:text-white mb-6 transition">
+            <ArrowLeft className="w-5 h-5 mr-2" /> Back
+          </button>
+          
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{job.title}</h1>
-              <div className="flex items-center mt-2 text-lg text-primary font-medium">
-                <Building2 className="h-5 w-5 mr-2" /> {job.company}
+              <h1 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">{job.title}</h1>
+              <div className="flex flex-wrap gap-6 text-[#F5F5DC]/90 font-medium">
+                <span className="flex items-center"><Building2 className="h-5 w-5 mr-2 opacity-70" /> {job.company}</span>
+                <span className="flex items-center"><MapPin className="h-5 w-5 mr-2 opacity-70" /> {job.location}</span>
+                <span className="flex items-center"><Briefcase className="h-5 w-5 mr-2 opacity-70" /> {job.type}</span>
               </div>
             </div>
+            
             {applied && (
-              <span className="flex items-center px-4 py-2 rounded-full bg-green-100 text-green-800 font-medium">
-                <CheckCircle className="h-4 w-4 mr-2" /> Applied
+              <span className="bg-[#F5F5DC] text-primary px-6 py-2 rounded-full font-bold flex items-center shadow-lg">
+                <CheckCircle className="h-5 w-5 mr-2" /> Applied
               </span>
             )}
           </div>
-
-          <div className="flex flex-wrap gap-6 mt-6 text-gray-600">
-            <span className="flex items-center"><MapPin className="h-5 w-5 mr-2" /> {job.location}</span>
-            <span className="flex items-center"><Briefcase className="h-5 w-5 mr-2" /> {job.type}</span>
-            {job.salary && <span className="flex items-center"><DollarSign className="h-5 w-5 mr-2" /> {job.salary}</span>}
-            <span className="flex items-center"><Clock className="h-5 w-5 mr-2" /> Posted {new Date(job.createdAt).toLocaleDateString()}</span>
-          </div>
         </div>
+      </div>
 
-        {/* Content Section */}
-        <div className="p-8">
-          <h2 className="text-xl font-bold mb-4">Job Description</h2>
-          <p className="text-gray-700 whitespace-pre-line leading-relaxed">{job.description}</p>
+      {/* --- CONTENT CARD (Floating Up) --- */}
+      <div className="max-w-4xl mx-auto px-4 -mt-20 relative z-20 pb-20">
+        <div className="bg-white rounded-3xl shadow-xl p-8 md:p-12 border border-gray-100">
+          
+          <div className="flex flex-wrap gap-4 mb-10 pb-10 border-b border-gray-100">
+             {job.salary && (
+               <div className="bg-[#F5F5DC] px-6 py-3 rounded-2xl flex items-center text-primary font-bold">
+                 <DollarSign className="w-5 h-5 mr-2" /> {job.salary}
+               </div>
+             )}
+             <div className="bg-gray-50 px-6 py-3 rounded-2xl flex items-center text-gray-500 font-medium">
+               <Clock className="w-5 h-5 mr-2" /> Posted {new Date(job.createdAt).toLocaleDateString()}
+             </div>
+          </div>
+
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">About the Role</h2>
+          <p className="text-gray-600 leading-loose text-lg mb-12 whitespace-pre-line">
+            {job.description}
+          </p>
 
           {job.requirements && job.requirements.length > 0 && (
-            <div className="mt-8">
-              <h2 className="text-xl font-bold mb-4">Requirements</h2>
-              <ul className="list-disc pl-5 space-y-2 text-gray-700">
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Requirements</h2>
+              <ul className="grid gap-3">
                 {job.requirements.map((req, index) => (
-                  <li key={index}>{req}</li>
+                  <li key={index} className="flex items-start text-gray-700 text-lg">
+                    <div className="mt-2 w-2 h-2 rounded-full bg-primary mr-4 flex-shrink-0"></div>
+                    {req}
+                  </li>
                 ))}
               </ul>
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="mt-10 pt-6 border-t border-gray-100 flex gap-4">
+          <div className="flex gap-4 pt-4">
             <button
               onClick={handleApply}
               disabled={applied}
-              className={`flex-1 py-3 px-6 rounded-md font-bold text-lg shadow transition ${
+              className={`flex-1 py-4 rounded-xl font-bold text-lg shadow-lg transition transform hover:-translate-y-1 ${
                 applied 
-                  ? 'bg-gray-300 cursor-not-allowed text-gray-500' 
-                  : 'bg-primary text-white hover:bg-indigo-700'
+                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+                  : 'bg-primary text-white hover:bg-[#600000]'
               }`}
             >
-              {applied ? 'Applied' : 'Apply Now'}
+              {applied ? 'Application Submitted' : 'Apply Now'}
             </button>
             
             <button
               onClick={handleSave}
               disabled={saved}
-              className={`px-8 py-3 rounded-md font-bold text-lg border transition ${
+              className={`px-8 py-4 rounded-xl font-bold text-lg border-2 transition ${
                 saved
-                  ? 'bg-gray-100 text-gray-500 border-gray-200'
-                  : 'border-primary text-primary hover:bg-indigo-50'
+                  ? 'bg-gray-50 text-gray-400 border-gray-200'
+                  : 'border-primary text-primary hover:bg-primary/5'
               }`}
             >
-              {saved ? 'Saved' : 'Save Job'}
+              {saved ? 'Saved' : 'Save'}
             </button>
           </div>
+
         </div>
       </div>
     </div>

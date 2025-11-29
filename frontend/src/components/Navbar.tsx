@@ -20,7 +20,7 @@ const Navbar = () => {
           <div className="flex items-center">
             <Link to={role === 'admin' ? '/admin' : '/'} className="flex items-center text-primary font-bold text-xl">
               <Briefcase className="mr-2 h-6 w-6" />
-              JobHunt<span className="text-gray-900">Lite</span>
+              Hire<span className="text-gray-900">Way</span>
               {role === 'admin' && <span className="ml-2 text-xs bg-gray-800 text-white px-2 py-0.5 rounded-full">ADMIN</span>}
             </Link>
           </div>
