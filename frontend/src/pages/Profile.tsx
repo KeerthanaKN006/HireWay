@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
-import { User as UserIcon, Mail, Phone, Briefcase, FileText, Save } from 'lucide-react';
+import { User as UserIcon, Mail, Phone, Briefcase, FileText, Save, Cpu } from 'lucide-react';
 
 const Profile = () => {
   const [formData, setFormData] = useState({
     name: '', email: '', title: '', bio: '', phone: ''
   });
+  // Add State for Skills
+  const [skills, setSkills] = useState<string[]>([]); 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,6 +21,8 @@ const Profile = () => {
           bio: res.data.bio || '',
           phone: res.data.phone || ''
         });
+        // Set Skills from Backend (Parsed from Resume)
+        setSkills(res.data.skills || []); 
       } catch (err) { console.error(err); } finally { setLoading(false); }
     };
     fetchProfile();
@@ -27,7 +31,7 @@ const Profile = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.put('/auth/profile', formData);
+      await api.put('/auth/profile', { ...formData, skills }); // Send updated skills too
       alert('Profile Updated Successfully!');
     } catch (err) { alert('Failed to update profile'); }
   };
@@ -36,11 +40,20 @@ const Profile = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleSkillChange = (index: number, value: string) => {
+    const newSkills = [...skills];
+    newSkills[index] = value;
+    setSkills(newSkills);
+  };
+
+  const addSkill = () => setSkills([...skills, ""]);
+  const removeSkill = (index: number) => setSkills(skills.filter((_, i) => i !== index));
+
   if (loading) return <div className="min-h-screen bg-primary flex items-center justify-center text-white">Loading...</div>;
 
   return (
     <div className="min-h-screen bg-primary flex items-center justify-center p-4">
-      <div className="max-w-4xl w-full bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row">
+      <div className="max-w-5xl w-full bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row">
         
         {/* Left Side - Visual Sidebar */}
         <div className="w-full md:w-1/3 bg-[#F5F5DC] p-10 flex flex-col justify-center items-center text-center">
@@ -49,7 +62,16 @@ const Profile = () => {
           </div>
           <h2 className="text-2xl font-bold text-primary">{formData.name}</h2>
           <p className="text-gray-500 font-medium mt-1">{formData.title || "Job Seeker"}</p>
-          <div className="mt-8 w-full h-1 bg-primary/10 rounded-full"></div>
+          
+          {/* Skills Tag Cloud Preview */}
+          <div className="mt-8 flex flex-wrap justify-center gap-2">
+            {skills.slice(0, 5).map((skill, i) => (
+              <span key={i} className="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded-md">
+                {skill}
+              </span>
+            ))}
+            {skills.length > 5 && <span className="text-xs text-gray-400">+{skills.length - 5} more</span>}
+          </div>
         </div>
 
         {/* Right Side - Form */}
@@ -118,6 +140,26 @@ const Profile = () => {
                 onChange={handleChange}
                 className="w-full bg-gray-50 rounded-xl p-4 text-gray-700 focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
               />
+            </div>
+
+            {/* --- NEW SKILLS SECTION --- */}
+            <div>
+              <label className="flex items-center text-xs font-bold text-gray-400 uppercase mb-2">
+                <Cpu className="w-3 h-3 mr-1" /> Skills (Parsed from Resume)
+              </label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {skills.map((skill, index) => (
+                  <div key={index} className="flex items-center bg-gray-100 rounded-full px-3 py-1">
+                    <input 
+                      value={skill}
+                      onChange={(e) => handleSkillChange(index, e.target.value)}
+                      className="bg-transparent text-sm font-medium text-gray-700 outline-none w-20"
+                    />
+                    <button type="button" onClick={() => removeSkill(index)} className="ml-1 text-gray-400 hover:text-red-500 font-bold">×</button>
+                  </div>
+                ))}
+                <button type="button" onClick={addSkill} className="text-sm text-primary font-bold hover:underline px-2">+ Add Skill</button>
+              </div>
             </div>
 
             <button type="submit" className="mt-4 px-8 py-3 bg-primary text-white rounded-xl font-bold shadow-lg hover:bg-[#600000] hover:shadow-xl transition-all flex items-center">

@@ -5,12 +5,15 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   
-  // --- NEW PROFILE FIELDS ---
-  title: { type: String }, // e.g., "Senior React Developer"
-  bio: { type: String },
-  phone: { type: String },
+  // --- RESUME & PARSED DATA ---
+  resume: { type: String }, // Path to file
+  skills: [{ type: String }], // Extracted from resume (e.g. ['React', 'Node'])
+  rawResumeText: { type: String }, // Full text for AI analysis later
   
   // Existing fields...
+  title: { type: String },
+  bio: { type: String },
+  phone: { type: String },
   otp: { type: String },
   otpExpires: { type: Date },
   isVerified: { type: Boolean, default: false },
